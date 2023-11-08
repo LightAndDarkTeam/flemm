@@ -28,7 +28,7 @@ export const updateMetadatas = async (req: Request, res: Response) => {
       "set": ["ARKHANTE", "MANTRIS"], 
       "tokenType": ["CARD"],
       "animationLevel": [1] }, 
-      "pagination": { "take": 10000, "skip": 0 }
+      "pagination": { "take": 100000, "skip": 0 }
   }
   
     
@@ -36,28 +36,58 @@ export const updateMetadatas = async (req: Request, res: Response) => {
     'Content-Type': 'application/json'
   }})
     .then(async function (response) {
-      let metadatas = response.data.cards
+      let metadatas = response.data
 
       if (metadatas.length > 0) {
         for (const meta of metadatas) {
-          let metadata: Metadata = new Metadata()
 
-          metadata.name = await meta.name,
-          metadata.foil = await meta.foil,
-          metadata.animationLevel = await meta.animationLevel,
-          metadata.power = await meta.power,
-          metadata.rarity = await meta.rarity,
-          metadata.rank = await meta.rank,
-          metadata.potential = await meta.potential,
-          metadata.grade = await meta.grade,
-          metadata.advancement = await meta.advancement,
-          metadata.set = await meta.set,
-          metadata.element = await meta.element,
-          metadata.cardType = await meta.cardType,
-          metadata.tokenType = await meta.tokenType
+          if (meta?.id) {
+            let existantMeta = await myDataSource
+            .getRepository(Metadata)
+            .createQueryBuilder('m')
+            .where('m.idFromLFD = :id', {id: meta.id})
+            .getOne()
 
-          const response = await Metadata.save(metadata)
+            if (existantMeta) {
+              await Metadata.update(existantMeta.id, {
+                lastMinActivePrice: meta.lastMinActivePrice,
+                lastRecentlySoldPrice: meta.lastRecentlySoldPrice,
+              })
+            }
+
+            else {
+
+              let metadata: Metadata = new Metadata()
+    
+              metadata.idFromLFD = await meta?.id,
+              metadata.collectionId = await meta?.collectionId,
+              metadata.ian = await meta?.ian,
+              metadata.name = await meta.name,
+              metadata.foil = await meta.foil,
+              metadata.animationLevel = await meta.animationLevel,
+              metadata.power = await meta.power,
+              metadata.rarity = await meta.rarity,
+              metadata.rank = await meta.rank,
+              metadata.potential = await meta.potential,
+              metadata.grade = await meta.grade,
+              metadata.advancement = await meta.advancement,
+              metadata.set = await meta.set,
+              metadata.season = await meta.season,
+              metadata.faction = await meta.faction,
+              metadata.element = await meta.element,
+              metadata.trait = await meta.trait,
+              metadata.cardType = await meta.cardType,
+              metadata.tokenType = await meta.tokenType
+              metadata.imagePath = await meta?.imagePath
+              metadata.lastRecentlySoldPrice = await meta?.lastRecentlySoldPrice
+              metadata.lastMinActivePrice = await meta?.lastMinActivePrice
+    
+              const response = await Metadata.save(metadata)
+            }            
+          }
         }
       }
-    })
+    }).catch(function (error) {console.log(error)})
+
+    res.json({message: 'ok'})
 }

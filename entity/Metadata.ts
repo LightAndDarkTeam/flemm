@@ -5,6 +5,9 @@ export class Metadata extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number
 
+    @Column({ unique: true })
+    idFromLFD: number
+
     @Column({ nullable: true})
     collectionId: number
 
@@ -70,18 +73,10 @@ export class Metadata extends BaseEntity {
     // CARD, MINT_PASS, etc..
     @Column({ nullable: true })
     tokenType: string
-
-    // Is metadata price already synced
-    @Column({ nullable: true, default: false })
-    priceSync: boolean
-
+    
     // Is metadata price already synced
     @Column({ default: false })
     sync: boolean
-
-    // Is metadata price already synced
-    @Column({ nullable: true, default: false })
-    pricePercentDiffSync: boolean
 
     // Is metadata image already synced
     @Column({ nullable: true, default: false })
@@ -103,5 +98,4 @@ export class Metadata extends BaseEntity {
     @Column()
     @UpdateDateColumn()
     date_update: Date
-
 }
