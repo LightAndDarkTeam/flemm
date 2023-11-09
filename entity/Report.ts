@@ -7,21 +7,47 @@ export class Report extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number
 
-    @Column({ unique: true })
-    idFromLFD: number
-    
-    @OneToOne(() => Metadata)
-    @JoinColumn()
-    metadata: Metadata
+    @Column()
+    name: string
 
-    @Column("decimal", { precision: 20, scale: 2, nullable: true })
-    alternativePrice: number
-
-    @Column("decimal", { precision: 20, scale: 2, nullable: true })
-    alternativePriceDiff: number
+    @Column({ nullable: true })
+    foil: boolean
 
     @Column("decimal", { precision: 20, scale: 2, nullable: true })
     standardPrice: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    standardXMultiplierPrice: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altCPrice: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altBPrice: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altAPrice: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altSPrice: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altCProfit: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altBProfit: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altAProfit: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altSProfit: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    averageProfit: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    totalProfit: number
 
     @Column()
     @CreateDateColumn()

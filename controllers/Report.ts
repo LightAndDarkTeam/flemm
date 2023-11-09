@@ -79,166 +79,91 @@ export const makeReport = async (req: Request, res: Response) => {
   const metadatas = await myDataSource
     .getRepository(Metadata)
     .createQueryBuilder('m')
-    .where('m.advancement = "COMBO"')
+    .where('m.advancement = "ALTERNATIVE"')
     .andWhere('m.lastMinActivePrice is not NULL')
     .andWhere('m.rarity not in (:...rarity)', {rarity: ['EXCLUSIVE']})
     .andWhere('m.name != "Hannibal & Honora"')
     .andWhere('m.name != "Hannibal + Honora"')
     // .andWhere('m.id = :id', {id: 2187})
+    // .limit(1)
     .getMany()
 
     
     for (const meta of metadatas) {
-      let associativeValue: {'alternative': [number], 'standard': [number]} = comboAssociativeArray[meta.ian]
       
       let alternativePrice = 0
       let standardPrice = 0
       let alts = []
       let stands = []
 
-      // console.log(meta.id, 'meta.id')
-
-      if (associativeValue.alternative.length > 0) {
-
-        for (const [index, ian] of associativeValue.alternative.entries()) {
-          // Alternative Part
-          let alt = await myDataSource
-            .getRepository(Metadata)
-            .createQueryBuilder('m')
-            .where('m.ian = :ian', {ian})
-            .andWhere('m.grade = :grade', {grade: meta.grade})
-            .andWhere('m.foil = :foil', {foil: meta.foil})
-            .andWhere('m.lastMinActivePrice is not NULL')
-            .getOne()
-
-            if (alt) {
-              alts[index] = alt
-            }
-        }
-
-
-        // console.log(alts, 'alts')
-        // console.log(alts.length, 'alts.length')
-        // console.log(associativeValue.alternative.length, 'associativeValue.alternative.length')
-        if (alts.length === associativeValue.alternative.length) {
-          alternativePrice = alts.reduce((a, b) => a + b.lastMinActivePrice, 0)
-        }
-
-      }
-
-      if (associativeValue.standard.length > 0) {
-
-        for (const [index, ian] of associativeValue.standard.entries()) {
-          // Standard Part
-          let stand = await myDataSource
-            .getRepository(Metadata)
-            .createQueryBuilder('m')
-            .where('m.ian = :ian', {ian})
-            .andWhere('m.foil = :foil', {foil: meta.foil})
-            .andWhere('m.lastMinActivePrice is not NULL')
-            .andWhere('m.rank = 1')
-            .getOne()
-
-          if (stand) {
-            stands[index] = stand
-          }
-        }
-        
-
-
-        if (stands.length === associativeValue.standard.length) {
-
-
-          standardPrice = stands.reduce((a, b) => {
-            
-            let multiplier = rarityCardsPowerUpNeeded[b.rarity]
-            
-            return (a + (b.lastMinActivePrice * multiplier))
-            
-          }, 0)
-        }
-      }
-
-      // Alternative Part
-      // let alt1 = await myDataSource
-      //   .getRepository(Metadata)
-      //   .createQueryBuilder('m')
-      //   .where('m.ian = :ian', {ian: associativeValue.alternative[0]})
-      //   .andWhere('m.grade = :grade', {grade: meta.grade})
-      //   .andWhere('m.foil = :foil', {foil: meta.foil})
-      //   .getOne()
-
-      // let alt2 = await myDataSource
-      //   .getRepository(Metadata)
-      //   .createQueryBuilder('m')
-      //   .where('m.ian = :ian', {ian: associativeValue.alternative[1]})
-      //   .andWhere('m.grade = :grade', {grade: meta.grade})
-      //   .andWhere('m.foil = :foil', {foil: meta.foil})
-      //   .getOne()
-
-      // if (alt1?.lastMinActivePrice && alt2?.lastMinActivePrice) {
-      //   if (alt1?.lastMinActivePrice >= 0 && alt2?.lastMinActivePrice >= 0) {
-      //     alternativePrice = alt1.lastMinActivePrice + alt2.lastMinActivePrice
-      //   }
-      // }
-      
-      // Standard Part
-      // let stand1 = await myDataSource
-      //   .getRepository(Metadata)
-      //   .createQueryBuilder('m')
-      //   .where('m.ian = :ian', {ian: associativeValue.standard[0]})
-      //   .andWhere('m.foil = :foil', {foil: meta.foil})
-      //   .andWhere('m.rank = 1')
-      //   .getOne()
-
-      // let stand2 = await myDataSource
-      //   .getRepository(Metadata)
-      //   .createQueryBuilder('m')
-      //   .where('m.ian = :ian', {ian: associativeValue.standard[1]})
-      //   .andWhere('m.foil = :foil', {foil: meta.foil})
-      //   .andWhere('m.rank = 1')
-      //   .getOne()
-
-      // if (stand1?.lastMinActivePrice && stand2?.lastMinActivePrice ) {
-      //   if (stand1?.lastMinActivePrice >= 0 && stand2?.lastMinActivePrice >= 0) {
-      //     standardPrice = (stand1.lastMinActivePrice * rarityCardsPowerUpNeeded[meta.rarity]) + (stand2.lastMinActivePrice * rarityCardsPowerUpNeeded[meta.rarity])
-      //   }
-      // }
-
-
       if (meta?.id) {
+
         let existantReport = await myDataSource
         .getRepository(Report)
         .createQueryBuilder('report')
-        .where('report.idFromLFD = :id', {id: meta.id})
+        .where('report.name = :name', {name: meta.name})
+        .andWhere('report.foil = :foil', {foil: meta.foil})
         .getOne()
 
-        let alternativePriceDiff = null
-        if (meta.lastMinActivePrice > 0 && alternativePrice > 0) {
-          alternativePriceDiff = 100 * (Number(meta.lastMinActivePrice) - Number(alternativePrice)) / ((Number(meta.lastMinActivePrice) + Number(alternativePrice)) /2)
-        }
+        if (!existantReport) {
 
-        if (existantReport) {
+          let standardMeta = await myDataSource
+          .getRepository(Metadata)
+          .createQueryBuilder('m')
+          .where('m.name = :name', {name: meta.name})
+          .andWhere('m.foil = :foil', {foil: meta.foil})
+          .andWhere('m.rarity = :rarity', {rarity: meta.rarity})
+          .andWhere('m.advancement = "STANDARD"')
+          .andWhere('m.rank = 1')
+          .andWhere('m.lastMinActivePrice is not NULL')
+          .getOne()
+  
+          standardPrice = standardMeta?.lastMinActivePrice
 
-          await Report.update(existantReport.id, {
-            standardPrice,
-            alternativePrice,
-            alternativePriceDiff
-          })
 
-        } else {
-         
+          let alternativeMetas = await myDataSource
+          .getRepository(Metadata)
+          .createQueryBuilder('m')
+          .where('m.name = :name', {name: meta.name})
+          .andWhere('m.foil = :foil', {foil: meta.foil})
+          .andWhere('m.rarity = :rarity', {rarity: meta.rarity})
+          .andWhere('m.advancement = "ALTERNATIVE"')
+          .andWhere('m.lastMinActivePrice is not NULL')
+          .getMany()
+
+
+          let altCPrice = alternativeMetas.find((alt) => alt.grade === 'C')?.lastMinActivePrice
+          let altBPrice = alternativeMetas.find((alt) => alt.grade === 'B')?.lastMinActivePrice
+          let altAPrice = alternativeMetas.find((alt) => alt.grade === 'A')?.lastMinActivePrice
+          let altSPrice = alternativeMetas.find((alt) => alt.grade === 'S')?.lastMinActivePrice
+
+
+
+
+
           let report: Report = new Report()
-          report.idFromLFD = meta?.id
-          report.metadata = meta
+          report.name = meta.name
+          report.foil = meta.foil
           report.standardPrice = standardPrice
-          report.alternativePrice = alternativePrice
-          report.alternativePriceDiff = alternativePriceDiff
+          report.standardXMultiplierPrice = standardPrice * rarityCardsPowerUpNeeded[meta.rarity]
+          report.altCPrice = altCPrice
+          report.altBPrice = altBPrice
+          report.altAPrice = altAPrice
+          report.altSPrice = altSPrice
+          report.altCProfit = altCPrice ? altCPrice - standardPrice : null
+          report.altBProfit = altBPrice ? altBPrice - standardPrice : null
+          report.altAProfit = altAPrice ? altAPrice - standardPrice : null
+          report.altSProfit = altSPrice ? altSPrice - standardPrice : null
+          
+          if (report.altCProfit && report.altBProfit && report.altAProfit && report.altSProfit) {
+            report.averageProfit = (report.altCProfit + report.altBProfit + report.altAProfit + report.altSProfit) / 4
+            report.totalProfit = report.averageProfit - report.standardXMultiplierPrice
+          }          
          
           await Report.save(report)
-
         }
       }
+        
     }
 
   res.json({metadatas, 'length': metadatas.length})
