@@ -8,14 +8,14 @@ import { Metadata } from "../entity/Metadata"
 
 import {myDataSource}  from "../config/ormconfig"
 
-export const getMetadatas = async (req: Request, res: Response) => {
-  const metadatas = await myDataSource
-    .getRepository(Metadata)
-    .createQueryBuilder('m')
-    .getMany()
+// export const getMetadatas = async (req: Request, res: Response) => {
+//   const metadatas = await myDataSource
+//     .getRepository(Metadata)
+//     .createQueryBuilder('m')
+//     .getMany()
     
-  res.json({metadatas})
-}
+//   res.json({metadatas})
+// }
 
 export const updateMetadatas = async (req: Request, res: Response) => {
   let postData = {
@@ -32,7 +32,7 @@ export const updateMetadatas = async (req: Request, res: Response) => {
   }
   
     
-  axios.post('http://localhost:5500/api/metadataaas', {...postData}, {headers: {
+  axios.post('https://api.lightsfromthedark.com/api/metadataaas', {...postData}, {headers: {
     'Content-Type': 'application/json'
   }})
     .then(async function (response) {

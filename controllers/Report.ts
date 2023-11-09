@@ -17,11 +17,15 @@ export const getReport = async (req: Request, res: Response) => {
     .orderBy('r.alternativePriceDiff', 'DESC')
     .getRawMany()
 
-    console.log(reports, 'reports')
+    // console.log(reports, 'reports')
 
     const workbook = new excelJS.Workbook();  // Create a new workbook  
     const worksheet = workbook.addWorksheet("Reports prices"); // New Worksheet  
     const path = "./files";  // Path to download excel  
+    const date = new Date()
+    const formatedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`
+
+    console.log(date, 'date')
     
     // Column for data in excel. key must match data key
     worksheet.columns = [
@@ -52,12 +56,12 @@ export const getReport = async (req: Request, res: Response) => {
     })
 
   try {  
-    const data = await workbook.xlsx.writeFile(`${path}/reports.xlsx`)
+    const data = await workbook.xlsx.writeFile(`${path}/report_${formatedDate}.xlsx`)
     .then(() => {     
       res.send({       
         status: "success",       
-        message: "file successfully downloaded",      
-        path: `${path}/reports.xlsx`,      
+        message: "file successfully downloaded",
+        path: `${path}/report_${formatedDate}.xlsx`,      
       })
     })
   } 
@@ -78,6 +82,8 @@ export const makeReport = async (req: Request, res: Response) => {
     .where('m.advancement = "COMBO"')
     .andWhere('m.lastMinActivePrice is not NULL')
     .andWhere('m.rarity not in (:...rarity)', {rarity: ['EXCLUSIVE']})
+    .andWhere('m.name != "Hannibal & Honora"')
+    .andWhere('m.name != "Hannibal + Honora"')
     // .andWhere('m.id = :id', {id: 2187})
     .getMany()
 
@@ -90,7 +96,7 @@ export const makeReport = async (req: Request, res: Response) => {
       let alts = []
       let stands = []
 
-      console.log(meta.id, 'meta.id')
+      // console.log(meta.id, 'meta.id')
 
       if (associativeValue.alternative.length > 0) {
 
@@ -111,9 +117,9 @@ export const makeReport = async (req: Request, res: Response) => {
         }
 
 
-        console.log(alts, 'alts')
-        console.log(alts.length, 'alts.length')
-        console.log(associativeValue.alternative.length, 'associativeValue.alternative.length')
+        // console.log(alts, 'alts')
+        // console.log(alts.length, 'alts.length')
+        // console.log(associativeValue.alternative.length, 'associativeValue.alternative.length')
         if (alts.length === associativeValue.alternative.length) {
           alternativePrice = alts.reduce((a, b) => a + b.lastMinActivePrice, 0)
         }
@@ -139,8 +145,17 @@ export const makeReport = async (req: Request, res: Response) => {
         }
         
 
+
         if (stands.length === associativeValue.standard.length) {
-          standardPrice = stands.reduce((a, b) => a + b.lastMinActivePrice, 0)
+
+
+          standardPrice = stands.reduce((a, b) => {
+            
+            let multiplier = rarityCardsPowerUpNeeded[b.rarity]
+            
+            return (a + (b.lastMinActivePrice * multiplier))
+            
+          }, 0)
         }
       }
 

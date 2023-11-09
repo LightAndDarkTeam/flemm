@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import {
-  getMetadatas,
+  // getMetadatas,
   updateMetadatas
 
 } from '../controllers/Metadata'
@@ -10,14 +10,14 @@ import {
   getReport,
 } from '../controllers/Report'
 
-const router = Router();
+const router = Router()
 
 router.get('/', (req, res) => res.status(200).send({
   message: 'Welcome to the API dude!'
-}));
+}))
 
 // METADATAS PART
-router.get('/metadata', getMetadatas)
+// router.get('/metadata', getMetadatas)
 router.get('/update-metadata', updateMetadatas)
 
 // REPORT
