@@ -6,15 +6,14 @@ import { Metadata } from "../entity/Metadata"
 import { Report } from "../entity/Report"
 
 import {myDataSource}  from "../config/ormconfig"
-import { comboAssociativeArray, rarityCardsPowerUpNeeded } from '../utils';
+import { comboAssociativeArray, rarityCardsPowerUpNeeded, triselsCost } from '../utils';
 
 export const getReport = async (req: Request, res: Response) => {
   const reports = await myDataSource
     .getRepository(Report)
     .createQueryBuilder('r')
-    .innerJoinAndSelect('r.metadata', 'm')
-    .select(['m.id AS id', 'm.ian AS ian', 'm.name AS name',  'm.foil AS foil', 'm.power as power', 'm.rarity as rarity', 'm.rank as rank', 'm.grade as grade', 'm.trait as trait', 'm.lastMinActivePrice as floorPrice', 'r.alternativePrice as alternativePrice', 'r.standardPrice as standardPrice', 'r.alternativePriceDiff as alternativePriceDiff'])
-    .orderBy('r.alternativePriceDiff', 'DESC')
+    .select(['r.id AS id', 'r.name AS name',  'r.foil AS foil', 'r.rarity as rarity', 'r.trait as trait', 'r.standardPrice as standardPrice','r.standardXMultiplierPrice as standardXMultiplierPrice', 'r.altCPrice as altCPrice', 'r.altBPrice as altBPrice', 'r.altAPrice as altAPrice', 'r.altSPrice as altSPrice', 'r.altCProfit as altCProfit', 'r.altBProfit as altBProfit', 'r.altAProfit as altAProfit', 'r.altSProfit as altSProfit', 'r.averageProfit as averageProfit', 'r.averageProfitPerTrisel as averageProfitPerTrisel',])
+    .orderBy('r.averageProfit', 'DESC')
     .getRawMany()
 
     // console.log(reports, 'reports')
@@ -24,24 +23,26 @@ export const getReport = async (req: Request, res: Response) => {
     const path = "./files";  // Path to download excel  
     const date = new Date()
     const formatedDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`
-
-    console.log(date, 'date')
     
     // Column for data in excel. key must match data key
     worksheet.columns = [
-      { header: "ID", key: "id", width: 10 }, 
-      { header: "IAN", key: "ian", width: 15 }, 
+      { header: "ID", key: "id", width: 10 },
       { header: "Name", key: "name", width: 20 },
       { header: "Foil", key: "foil", width: 10 },
-      { header: "Power", key: "power", width: 10 },
+      { header: "Standard price", key: "standardPrice", width: 20, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Standard x Multiplier", key: "standardXMultiplierPrice", width: 20, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Alt. C Price", key: "altCPrice", width: 20, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Alt. C Profit", key: "altCProfit", width: 25, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Alt. B Price", key: "altBPrice", width: 20, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Alt. B Profit", key: "altBProfit", width: 25, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Alt. A Price", key: "altAPrice", width: 20, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Alt. A Profit", key: "altAProfit", width: 25, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Alt. S Price", key: "altSPrice", width: 20, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Alt. S Profit", key: "altSProfit", width: 25, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Average Profit", key: "averageProfit", width: 25, style: { numFmt: '# ##0.00', bold: true } },
+      { header: "Average Profit / Trisel", key: "averageProfitPerTrisel", width: 25, style: { numFmt: '# ##0.00000', bold: true } },
       { header: "Rarity", key: "rarity", width: 10 },
-      { header: "Rank", key: "rank", width: 10 },
-      { header: "Grade", key: "grade", width: 10 },
       { header: "Trait", key: "trait", width: 10 },
-      { header: "Floor Price", key: "floorPrice", width: 20, style: { numFmt: '# ##0', bold: true } },
-      { header: "Alternative's Prices", key: "alternativePrice", width: 20, style: { numFmt: '# ##0', bold: true } },
-      { header: "Standard's Prices", key: "standardPrice", width: 20, style: { numFmt: '# ##0', bold: true } },
-      { header: "Alternative's Prices Diff", key: "alternativePriceDiff", width: 25, style: { numFmt: '# ##0.00', bold: true } },
   ]
 
   reports.forEach((report) => {  
@@ -136,28 +137,27 @@ export const makeReport = async (req: Request, res: Response) => {
           let altBPrice = alternativeMetas.find((alt) => alt.grade === 'B')?.lastMinActivePrice
           let altAPrice = alternativeMetas.find((alt) => alt.grade === 'A')?.lastMinActivePrice
           let altSPrice = alternativeMetas.find((alt) => alt.grade === 'S')?.lastMinActivePrice
-
-
-
-
+          let standardXMultiplierPrice = standardPrice * rarityCardsPowerUpNeeded[meta.rarity]
 
           let report: Report = new Report()
           report.name = meta.name
           report.foil = meta.foil
+          report.rarity = meta.rarity
+          report.trait = meta.trait
           report.standardPrice = standardPrice
-          report.standardXMultiplierPrice = standardPrice * rarityCardsPowerUpNeeded[meta.rarity]
+          report.standardXMultiplierPrice = standardXMultiplierPrice
           report.altCPrice = altCPrice
           report.altBPrice = altBPrice
           report.altAPrice = altAPrice
           report.altSPrice = altSPrice
-          report.altCProfit = altCPrice ? altCPrice - standardPrice : null
-          report.altBProfit = altBPrice ? altBPrice - standardPrice : null
-          report.altAProfit = altAPrice ? altAPrice - standardPrice : null
-          report.altSProfit = altSPrice ? altSPrice - standardPrice : null
+          report.altCProfit = altCPrice ? altCPrice - standardXMultiplierPrice : null
+          report.altBProfit = altBPrice ? altBPrice - standardXMultiplierPrice : null
+          report.altAProfit = altAPrice ? altAPrice - standardXMultiplierPrice : null
+          report.altSProfit = altSPrice ? altSPrice - standardXMultiplierPrice : null
           
           if (report.altCProfit && report.altBProfit && report.altAProfit && report.altSProfit) {
-            report.averageProfit = (report.altCProfit + report.altBProfit + report.altAProfit + report.altSProfit) / 4
-            report.totalProfit = report.averageProfit - report.standardXMultiplierPrice
+            report.averageProfit = ((report.altCProfit * 60) + (report.altBProfit * 27.5) + (report.altAProfit * 10.5) + (report.altSProfit * 2)) / 100
+            report.averageProfitPerTrisel = report.averageProfit / triselsCost[meta.rarity]
           }          
          
           await Report.save(report)

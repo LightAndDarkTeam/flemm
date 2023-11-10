@@ -169,3 +169,12 @@ export const rarityCardsPowerUpNeeded = {
     'SPECIAL_RARE': 5,
     'MYTHIC': 3,
 }
+
+export const triselsCost = {
+    'MYTHIC' : 7000,
+    'ULTRA_RARE': 5300,
+    'SPECIAL_RARE': 4600,
+    'RARE': 3500,
+    'UNCOMMON':2500,
+    'COMMON': 2000
+}

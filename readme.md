@@ -41,3 +41,9 @@ Par défault le rapport va se trouver dans le repertoire **files** du projet.
 Si tu en lances plusieurs / jour (ce qui ne sert pas à grand chose vu que je fais un releve de prix/j) le report va s'update vu que le nom est lié à la date, par contre le lendemain il va en recréer un nouveau ce qui permet de garder un historique.
 
 
+
+#### 5. Formule de calcul 
+
+| Name    | Foil | Standard Price | Standard X Multiplier  | Alt C Price | Alt C Profit | etc...  |  Average Profit |
+|---------|------|----------------|------------------------|-------------|--------------|---------|-----------------|
+| Sarash  | N    | 16.89          | 16.89 * 3 = 50.67      | 25.50       | Alt C Price - Standard X Multiplier = -25.17  | | ((altCProfit * 60) + (altBProfit * 27.5) + (altAProfit * 10.5) + (altSProfit * 2)) / 100 | 

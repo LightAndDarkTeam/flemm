@@ -23,22 +23,22 @@ export class Report extends BaseEntity {
     altCPrice: number
 
     @Column("decimal", { precision: 20, scale: 2, nullable: true })
-    altBPrice: number
-
-    @Column("decimal", { precision: 20, scale: 2, nullable: true })
-    altAPrice: number
-
-    @Column("decimal", { precision: 20, scale: 2, nullable: true })
-    altSPrice: number
-
-    @Column("decimal", { precision: 20, scale: 2, nullable: true })
     altCProfit: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altBPrice: number
 
     @Column("decimal", { precision: 20, scale: 2, nullable: true })
     altBProfit: number
 
     @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altAPrice: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
     altAProfit: number
+
+    @Column("decimal", { precision: 20, scale: 2, nullable: true })
+    altSPrice: number
 
     @Column("decimal", { precision: 20, scale: 2, nullable: true })
     altSProfit: number
@@ -47,7 +47,13 @@ export class Report extends BaseEntity {
     averageProfit: number
 
     @Column("decimal", { precision: 20, scale: 2, nullable: true })
-    totalProfit: number
+    averageProfitPerTrisel: number
+
+    @Column({ nullable: true })
+    rarity: string
+
+    @Column({ nullable: true })
+    trait: string
 
     @Column()
     @CreateDateColumn()
