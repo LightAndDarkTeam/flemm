@@ -13,7 +13,7 @@ export const getReport = async (req: Request, res: Response) => {
     .getRepository(Report)
     .createQueryBuilder('r')
     .select(['r.id AS id', 'r.name AS name',  'r.foil AS foil', 'r.rarity as rarity', 'r.trait as trait', 'r.standardPrice as standardPrice','r.standardXMultiplierPrice as standardXMultiplierPrice', 'r.altCPrice as altCPrice', 'r.altBPrice as altBPrice', 'r.altAPrice as altAPrice', 'r.altSPrice as altSPrice', 'r.altCProfit as altCProfit', 'r.altBProfit as altBProfit', 'r.altAProfit as altAProfit', 'r.altSProfit as altSProfit', 'r.averageProfit as averageProfit', 'r.averageProfitPerTrisel as averageProfitPerTrisel',])
-    .orderBy('r.averageProfit', 'DESC')
+    .orderBy('r.id', 'ASC')
     .getRawMany()
 
     // console.log(reports, 'reports')
