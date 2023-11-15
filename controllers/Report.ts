@@ -82,10 +82,11 @@ export const makeReport = async (req: Request, res: Response) => {
     .createQueryBuilder('m')
     .where('m.advancement = "ALTERNATIVE"')
     .andWhere('m.lastMinActivePrice is not NULL')
-    .andWhere('m.rarity not in (:...rarity)', {rarity: ['EXCLUSIVE']})
+    .andWhere('m.rarity not in (:...rarity)', {rarity: ['EXCLUSIVE', 'UNIQUE']})
     .andWhere('m.name != "Hannibal & Honora"')
     .andWhere('m.name != "Hannibal + Honora"')
-    // .andWhere('m.id = :id', {id: 2187})
+    // .andWhere('m.id = :id', {id: 92})
+    .orderBy('m.ian', 'ASC')
     // .limit(1)
     .getMany()
 
@@ -99,6 +100,7 @@ export const makeReport = async (req: Request, res: Response) => {
 
       if (meta?.id) {
 
+        // Already exist in db ?
         let existantReport = await myDataSource
         .getRepository(Report)
         .createQueryBuilder('report')
@@ -106,39 +108,46 @@ export const makeReport = async (req: Request, res: Response) => {
         .andWhere('report.foil = :foil', {foil: meta.foil})
         .getOne()
 
+
+        let standardMeta = await myDataSource
+        .getRepository(Metadata)
+        .createQueryBuilder('m')
+        .where('m.name = :name', {name: meta.name})
+        .andWhere('m.foil = :foil', {foil: meta.foil})
+        .andWhere('m.rarity = :rarity', {rarity: meta.rarity})
+        .andWhere('m.advancement = "STANDARD"')
+        .andWhere('m.rank = 1')
+        .andWhere('m.lastMinActivePrice is not NULL')
+        .getOne()
+
+        standardPrice = standardMeta?.lastMinActivePrice
+
+
+        let alternativeMetas = await myDataSource
+        .getRepository(Metadata)
+        .createQueryBuilder('m')
+        .where('m.name = :name', {name: meta.name})
+        .andWhere('m.foil = :foil', {foil: meta.foil})
+        .andWhere('m.rarity = :rarity', {rarity: meta.rarity})
+        .andWhere('m.advancement = "ALTERNATIVE"')
+        .andWhere('m.lastMinActivePrice is not NULL')
+        .getMany()
+
+        let altCPrice = alternativeMetas.find((alt) => alt.grade === 'C')?.lastMinActivePrice
+        let altBPrice = alternativeMetas.find((alt) => alt.grade === 'B')?.lastMinActivePrice
+        let altAPrice = alternativeMetas.find((alt) => alt.grade === 'A')?.lastMinActivePrice
+        let altSPrice = alternativeMetas.find((alt) => alt.grade === 'S')?.lastMinActivePrice
+        let standardXMultiplierPrice = standardPrice * rarityCardsPowerUpNeeded[meta.rarity]
+        let altCProfit = altCPrice ? altCPrice - standardXMultiplierPrice : null
+        let altBProfit = altBPrice ? altBPrice - standardXMultiplierPrice : null
+        let altAProfit = altAPrice ? altAPrice - standardXMultiplierPrice : null
+        let altSProfit = altSPrice ? altSPrice - standardXMultiplierPrice : null
+
+        let averageProfit = ((altCProfit * 60) + (altBProfit * 27.5) + (altAProfit * 10.5) + (altSProfit * 2)) / 100
+        let averageProfitPerTrisel = averageProfit / triselsCost[meta.rarity]
+        
+
         if (!existantReport) {
-
-          let standardMeta = await myDataSource
-          .getRepository(Metadata)
-          .createQueryBuilder('m')
-          .where('m.name = :name', {name: meta.name})
-          .andWhere('m.foil = :foil', {foil: meta.foil})
-          .andWhere('m.rarity = :rarity', {rarity: meta.rarity})
-          .andWhere('m.advancement = "STANDARD"')
-          .andWhere('m.rank = 1')
-          .andWhere('m.lastMinActivePrice is not NULL')
-          .getOne()
-  
-          standardPrice = standardMeta?.lastMinActivePrice
-
-
-          let alternativeMetas = await myDataSource
-          .getRepository(Metadata)
-          .createQueryBuilder('m')
-          .where('m.name = :name', {name: meta.name})
-          .andWhere('m.foil = :foil', {foil: meta.foil})
-          .andWhere('m.rarity = :rarity', {rarity: meta.rarity})
-          .andWhere('m.advancement = "ALTERNATIVE"')
-          .andWhere('m.lastMinActivePrice is not NULL')
-          .getMany()
-
-
-          let altCPrice = alternativeMetas.find((alt) => alt.grade === 'C')?.lastMinActivePrice
-          let altBPrice = alternativeMetas.find((alt) => alt.grade === 'B')?.lastMinActivePrice
-          let altAPrice = alternativeMetas.find((alt) => alt.grade === 'A')?.lastMinActivePrice
-          let altSPrice = alternativeMetas.find((alt) => alt.grade === 'S')?.lastMinActivePrice
-          let standardXMultiplierPrice = standardPrice * rarityCardsPowerUpNeeded[meta.rarity]
-
           let report: Report = new Report()
           report.name = meta.name
           report.foil = meta.foil
@@ -150,17 +159,32 @@ export const makeReport = async (req: Request, res: Response) => {
           report.altBPrice = altBPrice
           report.altAPrice = altAPrice
           report.altSPrice = altSPrice
-          report.altCProfit = altCPrice ? altCPrice - standardXMultiplierPrice : null
-          report.altBProfit = altBPrice ? altBPrice - standardXMultiplierPrice : null
-          report.altAProfit = altAPrice ? altAPrice - standardXMultiplierPrice : null
-          report.altSProfit = altSPrice ? altSPrice - standardXMultiplierPrice : null
+          report.altCProfit = altCProfit
+          report.altBProfit = altBProfit
+          report.altAProfit = altAProfit
+          report.altSProfit = altSProfit
           
-          if (report.altCProfit && report.altBProfit && report.altAProfit && report.altSProfit) {
-            report.averageProfit = ((report.altCProfit * 60) + (report.altBProfit * 27.5) + (report.altAProfit * 10.5) + (report.altSProfit * 2)) / 100
-            report.averageProfitPerTrisel = report.averageProfit / triselsCost[meta.rarity]
-          }          
+          if (altCProfit && altBProfit && altAProfit && altSProfit) {
+            report.averageProfit = ((altCProfit * 60) + (altBProfit * 27.5) + (altAProfit * 10.5) + (altSProfit * 2)) / 100
+            report.averageProfitPerTrisel = averageProfitPerTrisel
+          }  
          
           await Report.save(report)
+        } else {
+          await Report.update(existantReport.id, {
+            standardPrice: standardPrice,
+            standardXMultiplierPrice: standardXMultiplierPrice,
+            altCPrice: altCPrice,
+            altBPrice: altBPrice,
+            altAPrice: altAPrice,
+            altSPrice: altSPrice,
+            altCProfit: altCProfit,
+            altBProfit: altBProfit,
+            altAProfit: altAProfit,
+            altSProfit: altSProfit,
+            averageProfit: ((altCProfit * 60) + (altBProfit * 27.5) + (altAProfit * 10.5) + (altSProfit * 2)) / 100,
+            averageProfitPerTrisel: averageProfit / triselsCost[meta.rarity]
+          })
         }
       }
         

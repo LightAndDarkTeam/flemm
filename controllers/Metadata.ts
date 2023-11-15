@@ -58,8 +58,6 @@ export const updateMetadatas = async (req: Request, res: Response) => {
             else {
 
               let metadata: Metadata = new Metadata()
-    
-              metadata.idFromLFD = await meta?.id,
               metadata.collectionId = await meta?.collectionId,
               metadata.ian = await meta?.ian,
               metadata.name = await meta.name,
