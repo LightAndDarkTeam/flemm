@@ -27,8 +27,9 @@ export const updateMetadatas = async (req: Request, res: Response) => {
       "advancement": [], 
       "set": ["ARKHANTE", "MANTRIS"], 
       "tokenType": ["CARD"],
-      "animationLevel": [1] }, 
-      "pagination": { "take": 100000, "skip": 0 }
+      "animationLevel": [1] 
+    }, 
+    "pagination": { "take": 100000, "skip": 0 }
   }
   
     
@@ -59,6 +60,7 @@ export const updateMetadatas = async (req: Request, res: Response) => {
 
               let metadata: Metadata = new Metadata()
               metadata.collectionId = await meta?.collectionId,
+              metadata.idFromLFD = await meta?.id,
               metadata.ian = await meta?.ian,
               metadata.name = await meta.name,
               metadata.foil = await meta.foil,

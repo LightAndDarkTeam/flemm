@@ -28,3 +28,7 @@ select * from report;
 delete from report;
 
 
+
+select * from report where advancement = 'COMBO'
+
+

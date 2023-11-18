@@ -80,13 +80,14 @@ export const makeReport = async (req: Request, res: Response) => {
   const metadatas = await myDataSource
     .getRepository(Metadata)
     .createQueryBuilder('m')
-    .where('m.advancement = "ALTERNATIVE"')
+    .where('m.advancement in ("ALTERNATIVE", "COMBO")')
     .andWhere('m.lastMinActivePrice is not NULL')
     .andWhere('m.rarity not in (:...rarity)', {rarity: ['EXCLUSIVE', 'UNIQUE']})
     .andWhere('m.name != "Hannibal & Honora"')
     .andWhere('m.name != "Hannibal + Honora"')
     // .andWhere('m.id = :id', {id: 92})
-    .orderBy('m.ian', 'ASC')
+    .orderBy('m.advancement', 'ASC')
+    .addOrderBy('m.ian', 'ASC')
     // .limit(1)
     .getMany()
 
@@ -120,7 +121,7 @@ export const makeReport = async (req: Request, res: Response) => {
         .andWhere('m.lastMinActivePrice is not NULL')
         .getOne()
 
-        standardPrice = standardMeta?.lastMinActivePrice
+        standardPrice = standardMeta?.lastMinActivePrice ?? null
 
 
         let alternativeMetas = await myDataSource
@@ -129,7 +130,7 @@ export const makeReport = async (req: Request, res: Response) => {
         .where('m.name = :name', {name: meta.name})
         .andWhere('m.foil = :foil', {foil: meta.foil})
         .andWhere('m.rarity = :rarity', {rarity: meta.rarity})
-        .andWhere('m.advancement = "ALTERNATIVE"')
+        .andWhere('m.advancement = :advancement', {advancement: meta.advancement})
         .andWhere('m.lastMinActivePrice is not NULL')
         .getMany()
 
