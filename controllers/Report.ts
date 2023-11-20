@@ -88,6 +88,7 @@ export const makeReport = async (req: Request, res: Response) => {
     // .andWhere('m.id = :id', {id: 92})
     .orderBy('m.advancement', 'ASC')
     .addOrderBy('m.ian', 'ASC')
+    .addOrderBy('m.trait', 'ASC')
     // .limit(1)
     .getMany()
 
@@ -107,6 +108,7 @@ export const makeReport = async (req: Request, res: Response) => {
         .createQueryBuilder('report')
         .where('report.name = :name', {name: meta.name})
         .andWhere('report.foil = :foil', {foil: meta.foil})
+        .andWhere(meta && meta.advancement === 'COMBO' ? `report.trait = :trait` : '1=1', {trait: meta.trait})
         .getOne()
 
 
