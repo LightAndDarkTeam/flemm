@@ -132,6 +132,7 @@ export const makeReport = async (req: Request, res: Response) => {
         .where('m.name = :name', {name: meta.name})
         .andWhere('m.foil = :foil', {foil: meta.foil})
         .andWhere('m.rarity = :rarity', {rarity: meta.rarity})
+        .andWhere('m.trait = :trait', {trait: meta.trait})
         .andWhere('m.advancement = :advancement', {advancement: meta.advancement})
         .andWhere('m.lastMinActivePrice is not NULL')
         .getMany()

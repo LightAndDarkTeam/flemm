@@ -32,3 +32,4 @@ delete from report;
 select * from report where advancement = 'COMBO'
 
 
+select * from metadata where trait is null;
